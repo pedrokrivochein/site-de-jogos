@@ -1,9 +1,9 @@
 # Site de Jogos
 
-#### Environment:
+#### Environment | Ambiente:
 - Node JS
 
-#### Modules:
+#### Modules | Modulos:
 - Socket.io
 - Express
 
