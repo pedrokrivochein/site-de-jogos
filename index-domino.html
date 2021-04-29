@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Dominó</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .backButton {
+            width: 40px;
+            height: 40px;
+            background-color: teal;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            border-radius: 100%;
+            z-index: 10;
+        }
+
+        .backButton :hover {
+            cursor: pointer;
+        }
+
+        .gameBody {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .gamePreview {
+            width: 1200px;
+            display: grid;
+            grid-template-columns: repeat(10, auto);
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 226px;
+            left: 50%;
+            transform: translate(-50%);
+        }
+
+        .gamePreview .pieceSide {
+            width: 100px;
+            height: 50px;
+            background-color: rgb(0, 163, 163);
+            transition: 0.2s;
+            border-radius: 20px;
+            border: 4px solid rgb(0, 163, 163);
+            display: grid;
+            grid-template-columns: 50px 50px;
+            margin-top: 10px;
+        }
+
+        .gamePreview .pieceSide .n {
+            width: 50px;
+            height: 50px;
+            display: flex;
+        }
+
+        .gamePreview .pieceSide .n span {
+            margin: auto;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+        }
+
+        .game {
+            display: grid;
+            grid-template-rows: 100px;
+            grid-template-columns: 220px 120px 220px;
+            align-items: center;
+        }
+
+        .pieceSide {
+            width: 200px;
+            height: 100px;
+            background-color: rgb(0, 163, 163);
+            transition: 0.2s;
+            margin-left: 10px;
+            border-radius: 20px;
+            border: 4px solid rgb(0, 163, 163);
+            display: grid;
+            grid-template-columns: 100px 100px;
+        }
+
+        .pieceSide .n {
+            width: 100px;
+            height: 100px;
+            display: flex;
+        }
+
+        .pieceSide .n span {
+            margin: auto;
+            font-size: 40px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+        }
+
+        .pieceSide .n1 {
+            border-right: 2px solid white;
+        }
+
+        .block {
+            width: 100px;
+            height: 100px;
+            background-color: rgb(0, 163, 163);
+            outline: 1px solid white;
+            border-radius: 100%;
+        }
+
+        .enemyPieces {
+            position: fixed;
+            width: 200px;
+            height: 60px;
+            bottom: 300px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 20px;
+        }
+
+        .enemyPieces span {
+            color: rgb(0, 163, 163);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 20px;
+        }
+
+        .buyPieces {
+            position: fixed;
+            width: 200px;
+            height: 60px;
+            bottom: 240px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgb(0, 163, 163);
+            border-radius: 20px;
+        }
+
+        .buyPieces:hover {
+            cursor: pointer;
+            border: 2px solid teal
+        }
+
+        .buyPieces span {
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 20px;
+        }
+
+        .piecesBody {
+            position: fixed;
+            width: 100%;
+            height: 200px;
+            bottom: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .piecesBody>div:hover {
+            transform: translateY(-20px);
+            cursor: pointer;
+        }
+
+        .piece {
+            width: 100px;
+            height: 200px;
+            background-color: rgb(0, 163, 163);
+            transition: 0.2s;
+            margin-left: 10px;
+            border-radius: 20px;
+            border: 4px solid rgb(0, 163, 163);
+        }
+
+        .piece .n {
+            width: 100px;
+            height: 100px;
+            display: flex;
+        }
+
+        .piece .n span {
+            margin: auto;
+            font-size: 40px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+        }
+
+        .piece .n1 {
+            border-bottom: 2px solid white;
+        }
+
+        .stats {
+            position: fixed;
+            width: 600px;
+            height: 100px;
+            background-color: teal;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+        }
+
+        .statsText {
+            margin: auto;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .warningTop {
+            position: fixed;
+            width: 600px;
+            height: 60px;
+            background-color: teal;
+            top: 126px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+        }
+
+        .warningTopText {
+            margin: auto;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="backButton" onclick="window.location.href = 'http://localhost:5000/domino';">
+        <i class="fa fa-angle-left" style="color: white; font-size:40px; margin-left: 10px;"></i>
+    </div>
+    <div class="stats">
+        <span id="sala" class="statsText">Sala: 0</span>
+        <span id="placar" class="statsText">Vermelho: 0 | Azul: 0</span>
+    </div>
+    <div class="warningTop">
+        <span id="warningTopText" class="warningTopText"></span>
+    </div>
+    <div id="gamePreview" class="gamePreview">
+    </div>
+    <div class="gameBody">
+        <div id="game" class="game">
+            <div id="leftPiece" class="pieceSide">
+                <div class="n n1"><span>-</span></div>
+                <div class="n"><span>-</span></div>
+            </div>
+            <div id="middlePiece" class="piece">
+                <div class="n n1"><span>-</span></div>
+                <div class="n"><span>-</span></div>
+            </div>
+            <div id="rightPiece" class="pieceSide">
+                <div class="n n1"><span>-</span></div>
+                <div class="n"><span>-</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="enemyPieces">
+        <span id="enemyPiecesText">Adversário - 7</span>
+    </div>
+    <div class="buyPieces" onclick="buyPiece()">
+        <span id="buyText">Comprar - 13</span>
+    </div>
+    <div id="piecesBody" class="piecesBody">
+    </div>
+</body>
+<script>
+    var script = document.createElement('script');
+    script.src = "http://localhost:3000/socket.io/socket.io.js";
+    document.getElementsByTagName('head')[0].appendChild(script);
+    var socket = null;
+    var turn = true;
+    var color = 'gray';
+    var id = window.location.href.split("/")[4];
+    var vermelho = 0;
+    var azul = 0;
+    var pieces = [[0, 0], [0, 1], [1, 1], [0, 2], [1, 2], [2, 2], [0, 3], [1, 3], [2, 3], [3, 3],
+    [0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [0, 5], [1, 5], [2, 5], [3, 5], [4, 5], [5, 5],
+    [0, 6], [1, 6], [2, 6], [3, 6], [4, 6], [5, 6], [6, 6]];
+    var gamePieces = null;
+    var myPieces = 7;
+    var enemyPieces = 7;
+    var skipTurn = 0;
+    script.onload = callback = function () {
+        socket = io('http://localhost:3000', { transports: ['websocket'] });
+
+        document.getElementById("sala").innerHTML = "Sala: " + id;
+        document.getElementById("warningTopText").innerHTML = "Sua vez.";
+
+        socket.on("update-domino", (data, _color) => {
+            if (gamePieces == null) {
+                socket.emit("domino-request-pieces", id);
+            }
+            color = _color;
+        });
+
+        socket.on("receive-pieces", (data) => {
+            gamePieces = data;
+            if (color == "red") {
+                for (var x in gamePieces["red"]) {
+                    document.getElementById("piecesBody").insertAdjacentHTML('beforeend', `
+                    <div id="${x}r" class="piece" onclick="playPiece(this)">
+                        <div class="n n1"><span>${pieces[gamePieces["red"][x]][0]}</span></div>
+                        <div class="n"><span>${pieces[gamePieces["red"][x]][1]}</span></div>
+                    </div>
+                    `);
+                }
+            } else if (color == "blue") {
+                for (var x in gamePieces["blue"]) {
+                    document.getElementById("piecesBody").insertAdjacentHTML('beforeend', `
+                    <div id="${x}b" class="piece" onclick="playPiece(this)">
+                        <div class="n n1"><span>${pieces[gamePieces["blue"][x]][0]}</span></div>
+                        <div class="n"><span>${pieces[gamePieces["blue"][x]][1]}</span></div>
+                    </div>
+                    `);
+                }
+            }
+            var mP = document.getElementById("middlePiece").children;
+            mP[0].children[0].innerHTML = gamePieces["middle"][0];
+            mP[1].children[0].innerHTML = gamePieces["middle"][1];
+            document.getElementById("gamePreview").insertAdjacentHTML("afterbegin", `
+                    <div class="pieceSide">
+                        <div class="n n1"><span>${mP[0].children[0].innerHTML}</span></div>
+                        <div class="n"><span>${mP[1].children[0].innerHTML}</span></div>
+                    </div> 
+                `);
+            document.getElementById("buyText").innerHTML = "Comprar - " + gamePieces["left"];
+        });
+
+        socket.on("play-piece-update", _piece => {
+            playPieceReceive(_piece);
+            document.getElementById("warningTopText").innerHTML = "Sua vez.";
+            turn = true;
+            enemyPieces--;
+            document.getElementById("enemyPiecesText").innerHTML = "Adversário - " + enemyPieces;
+            skipTurn = 0;
+            canPlay();
+        });
+
+        socket.on("buy-piece", _piece => {
+            gamePieces["left"]--;
+            document.getElementById("piecesBody").insertAdjacentHTML('beforeend', `
+                <div id="${_piece}b" class="piece" onclick="playPiece(this)">
+                    <div class="n n1"><span>${_piece[0]}</span></div>
+                        <div class="n"><span>${_piece[1]}</span></div>
+                    </div>
+                `);
+            document.getElementById("buyText").innerHTML = "Comprar - " + gamePieces["left"];
+            socket.emit("domino-buy-piece-update", id);
+            myPieces++;
+            canPlay();
+        });
+
+        socket.on("buy-piece-update", () => {
+            gamePieces["left"]--;
+            document.getElementById("buyText").innerHTML = "Comprar - " + gamePieces["left"];
+            enemyPieces++;
+            document.getElementById("enemyPiecesText").innerHTML = "Adversário - " + enemyPieces;
+        });
+
+        socket.on("skip-turn", () => {
+            document.getElementById("warningTopText").innerHTML = "Sua vez. | O Adversário não possui peças para jogar.";
+            turn = true;
+            document.getElementById("enemyPiecesText").innerHTML = "Adversário - " + enemyPieces;
+            canPlay();
+        });
+
+        socket.on("player-connected", () => {
+            vermelho = 0;
+            azul = 0;
+            resetBoard();
+            document.getElementById("warningTopText").innerHTML = "Adversário conectou.";
+        });
+
+        socket.on("player-disconnected", () => {
+            vermelho = 0;
+            azul = 0;
+            resetBoard();
+            socket.emit("win-domino", id, "gray");
+            document.getElementById("warningTopText").innerHTML = "Adversário desconectou.";
+        });
+
+        socket.on("game-won", _color => {
+            if (_color != "gray") {
+                if (_color == "red") {
+                    vermelho++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do vermelho.";
+                } else {
+                    azul++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do azul.";
+                }
+            }
+            resetBoard();
+        });
+
+        socket.emit("join-room", "domino", id);
+    }
+
+    function playPiece(element) {
+        if (turn && color != "gray") {
+            var cP = element.children;
+            var mP = document.getElementById("middlePiece").children;
+            var lP = document.getElementById("leftPiece").children;
+            var rP = document.getElementById("rightPiece").children;
+            var sP = [];
+            var choose = false;
+            if (lP[0].children[0].innerHTML == "-") {
+                if (cP[0].children[0].innerHTML == mP[0].children[0].innerHTML) {
+                    sP = ["afterbegin", [lP[0].children[0].innerHTML, lP[1].children[0].innerHTML]];
+                    lP[0].children[0].innerHTML = cP[1].children[0].innerHTML;
+                    lP[1].children[0].innerHTML = cP[0].children[0].innerHTML;
+                    socket.emit("domino-play-piece", [cP[1].children[0].innerHTML, cP[0].children[0].innerHTML, "leftPiece"], id, color);
+                    choose = true;
+                } else if (cP[1].children[0].innerHTML == mP[0].children[0].innerHTML) {
+                    sP = ["afterbegin", [lP[0].children[0].innerHTML, lP[1].children[0].innerHTML]];
+                    lP[0].children[0].innerHTML = cP[0].children[0].innerHTML;
+                    lP[1].children[0].innerHTML = cP[1].children[0].innerHTML;
+                    socket.emit("domino-play-piece", [cP[0].children[0].innerHTML, cP[1].children[0].innerHTML, "leftPiece"], id, color);
+                    choose = true;
+                }
+            } else {
+                if (element.children[0].children[0].innerHTML == lP[0].children[0].innerHTML) {
+                    sP = ["afterbegin", [lP[0].children[0].innerHTML, lP[1].children[0].innerHTML]];
+                    lP[0].children[0].innerHTML = cP[1].children[0].innerHTML;
+                    lP[1].children[0].innerHTML = cP[0].children[0].innerHTML;
+                    socket.emit("domino-play-piece", [cP[1].children[0].innerHTML, cP[0].children[0].innerHTML, "leftPiece"], id, color);
+                    choose = true;
+                } else if (element.children[1].children[0].innerHTML == lP[0].children[0].innerHTML) {
+                    sP = ["afterbegin", [lP[0].children[0].innerHTML, lP[1].children[0].innerHTML]];
+                    lP[0].children[0].innerHTML = cP[0].children[0].innerHTML;
+                    lP[1].children[0].innerHTML = cP[1].children[0].innerHTML;
+                    socket.emit("domino-play-piece", [cP[0].children[0].innerHTML, cP[1].children[0].innerHTML, "leftPiece"], id, color);
+                    choose = true;
+                }
+            }
+            if (!choose) {
+                if (rP[0].children[0].innerHTML == "-") {
+                    if (cP[0].children[0].innerHTML == mP[0].children[0].innerHTML) {
+                        sP = ["beforeend", [rP[0].children[0].innerHTML, rP[1].children[0].innerHTML]];
+                        rP[0].children[0].innerHTML = cP[0].children[0].innerHTML;
+                        rP[1].children[0].innerHTML = cP[1].children[0].innerHTML;
+                        socket.emit("domino-play-piece", [cP[0].children[0].innerHTML, cP[1].children[0].innerHTML, "rightPiece"], id, color);
+                        choose = true;
+                    } else if (cP[1].children[0].innerHTML == mP[0].children[0].innerHTML) {
+                        sP = ["beforeend", [rP[0].children[0].innerHTML, rP[1].children[0].innerHTML]];
+                        rP[0].children[0].innerHTML = cP[1].children[0].innerHTML;
+                        rP[1].children[0].innerHTML = cP[0].children[0].innerHTML;
+                        socket.emit("domino-play-piece", [cP[1].children[0].innerHTML, cP[0].children[0].innerHTML, "rightPiece"], id, color);
+                        choose = true;
+                    }
+                } else {
+                    if (element.children[0].children[0].innerHTML == rP[1].children[0].innerHTML) {
+                        sP = ["beforeend", [rP[0].children[0].innerHTML, rP[1].children[0].innerHTML]];
+                        rP[0].children[0].innerHTML = cP[0].children[0].innerHTML;
+                        rP[1].children[0].innerHTML = cP[1].children[0].innerHTML;
+                        socket.emit("domino-play-piece", [cP[0].children[0].innerHTML, cP[1].children[0].innerHTML, "rightPiece"], id, color);
+                        choose = true;
+                    } else if (element.children[1].children[0].innerHTML == rP[1].children[0].innerHTML) {
+                        sP = ["beforeend", [rP[0].children[0].innerHTML, rP[1].children[0].innerHTML]];
+                        rP[0].children[0].innerHTML = cP[1].children[0].innerHTML;
+                        rP[1].children[0].innerHTML = cP[0].children[0].innerHTML;
+                        socket.emit("domino-play-piece", [cP[1].children[0].innerHTML, cP[0].children[0].innerHTML, "rightPiece"], id, color);
+                        choose = true;
+                    }
+                }
+            }
+            if (choose) {
+                element.remove();
+                document.getElementById("warningTopText").innerHTML = "Vez do adversário.";
+                turn = false;
+                if (sP[1][0] != "-")
+                    document.getElementById("gamePreview").insertAdjacentHTML(sP[0], `
+                    <div class="pieceSide">
+                        <div class="n n1"><span>${sP[1][0]}</span></div>
+                        <div class="n"><span>${sP[1][1]}</span></div>
+                    </div>            
+                `);
+                myPieces--;
+                win();
+            }
+        }
+    }
+
+    function playPieceReceive(_piece) {
+        var p = document.getElementById(_piece[2]).children;
+        var side = "";
+        (_piece[2] == "leftPiece") ? side = "afterbegin" : side = "beforeend";
+        if (p[0].children[0].innerHTML != "-")
+            document.getElementById("gamePreview").insertAdjacentHTML(side, `
+                    <div class="pieceSide">
+                        <div class="n n1"><span>${p[0].children[0].innerHTML}</span></div>
+                        <div class="n"><span>${p[1].children[0].innerHTML}</span></div>
+                    </div>            
+                `);
+        p[0].children[0].innerHTML = _piece[0];
+        p[1].children[0].innerHTML = _piece[1];
+    }
+
+    function buyPiece() {
+        if (turn && color != "gray") {
+            if (gamePieces["left"] > 0) {
+                socket.emit("domino-buy-piece", id, color);
+            }
+        }
+    }
+
+    function win() {
+        if (myPieces == 0) {
+            if (color == "red") {
+                vermelho++;
+                document.getElementById("warningTopText").innerHTML = "Vitória do vermelho.";
+            } else {
+                azul++;
+                document.getElementById("warningTopText").innerHTML = "Vitória do azul.";
+            }
+            socket.emit("win-domino", id, color);
+            resetBoard();
+        }
+    }
+
+    function canPlay() {
+        if (gamePieces["left"] == 0 && myPieces > 0 && enemyPieces > 0) {
+            var cPieces = document.getElementById("piecesBody").children;
+            var lP = document.getElementById("leftPiece").children[0].children[0].innerHTML;
+            var rP = document.getElementById("rightPiece").children[1].children[0].innerHTML;
+            for (var x in cPieces) {
+                if (cPieces[x].children != null) {
+                    if (cPieces[x].children[0].children[0].innerHTML == lP ||
+                        cPieces[x].children[1].children[0].innerHTML == lP ||
+                        cPieces[x].children[0].children[0].innerHTML == rP ||
+                        cPieces[x].children[1].children[0].innerHTML == rP) {
+                        return true;
+                    }
+                }
+            }
+            skipTurn++;
+            if (skipTurn >= 2) {
+                socket.emit("win-domino-check-winner", id);
+                return true;
+            }
+            document.getElementById("warningTopText").innerHTML = "Vez do adversário. | Você não possui peças para jogar.";
+            socket.emit("domino-skip-turn", id);
+            return false;
+        }
+        return true;
+    }
+
+    function resetBoard() {
+        document.getElementById("gamePreview").innerHTML = "";
+        document.getElementById("piecesBody").innerHTML = "";
+        document.getElementById("leftPiece").children[0].children[0].innerHTML = "-";
+        document.getElementById("leftPiece").children[1].children[0].innerHTML = "-";
+        document.getElementById("rightPiece").children[0].children[0].innerHTML = "-";
+        document.getElementById("rightPiece").children[1].children[0].innerHTML = "-";
+        socket.emit("domino-request-pieces", id);
+        document.getElementById("placar").innerHTML = "Vermelho: " + vermelho + " | Azul: " + azul;
+        myPieces = 7;
+        enemyPieces = 7;
+        document.getElementById("enemyPiecesText").innerHTML = "Adversário - " + enemyPieces;
+    }
+</script>
+
+</html>

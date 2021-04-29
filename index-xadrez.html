@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Xadrez</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .backButton {
+            width: 40px;
+            height: 40px;
+            background-color: teal;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            border-radius: 100%;
+            z-index: 10;
+        }
+
+        .backButton :hover {
+            cursor: pointer;
+        }
+
+        .gameBody {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .choices {
+            width: 600px;
+            height: 600px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: teal;
+            z-index: 2;
+            display: grid;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .choice {
+            width: 400px;
+            height: 100px;
+            text-align: center;
+            display: flex;
+        }
+
+        .choice :hover {
+            cursor: pointer;
+            border-bottom: 2px solid rgb(0, 163, 163);
+        }
+
+        .choice span {
+            margin: auto;
+            font-size: 40px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+        }
+
+        .gamePreview {
+            width: 1200px;
+            display: grid;
+            grid-template-columns: repeat(10, auto);
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 226px;
+            left: 50%;
+            transform: translate(-50%);
+        }
+
+        .gamePreview .pieceSide {
+            width: 100px;
+            height: 50px;
+            background-color: rgb(0, 163, 163);
+            transition: 0.2s;
+            border-radius: 20px;
+            border: 4px solid rgb(0, 163, 163);
+            display: grid;
+            grid-template-columns: 50px 50px;
+            margin-top: 10px;
+        }
+
+        .gamePreview .pieceSide .n {
+            width: 50px;
+            height: 50px;
+            display: flex;
+        }
+
+        .gamePreview .pieceSide .n span {
+            margin: auto;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+        }
+
+        .board {
+            display: grid;
+            grid-template-rows: 100px;
+            grid-template-columns: repeat(8, 100px);
+            grid-template-rows: repeat(8, 100px);
+            align-items: center;
+        }
+
+        .square {
+            width: 100px;
+            height: 100px;
+        }
+
+        .dark {
+            background-color: teal;
+        }
+
+        .light {
+            background-color: rgb(0, 163, 163);
+        }
+
+        .block {
+            width: 100px;
+            height: 100px;
+            background-color: rgb(0, 163, 163);
+            outline: 1px solid white;
+            border-radius: 100%;
+        }
+
+        .piece {
+            width: 100%;
+            height: 100%;
+        }
+
+        .piece :hover {
+            cursor: grab;
+        }
+
+        .piece img {
+            width: 100px;
+            height: 100px;
+        }
+
+        .enemy img {
+            filter: brightness(0);
+        }
+
+        .enemy :hover {
+            cursor: default;
+        }
+
+        .stats {
+            position: fixed;
+            width: 600px;
+            height: 100px;
+            background-color: teal;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+        }
+
+        .statsText {
+            margin: auto;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .warningTop {
+            position: fixed;
+            width: 600px;
+            height: 60px;
+            background-color: teal;
+            top: 126px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+        }
+
+        .warningTopText {
+            margin: auto;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="backButton" onclick="window.location.href = 'http://localhost:5000/xadrez';">
+        <i class="fa fa-angle-left" style="color: white; font-size:40px; margin-left: 10px;"></i>
+    </div>
+    <div class="stats">
+        <span id="sala" class="statsText">Sala: 0</span>
+        <span id="placar" class="statsText">Vermelho: 0 | Azul: 0</span>
+    </div>
+    <div class="warningTop">
+        <span id="warningTopText" class="warningTopText"></span>
+    </div>
+    <div id="gamePreview" class="gamePreview">
+    </div>
+    <div class="gameBody">
+        <div id="choices" class="choices">
+            <div class="choice" onclick="choose(this)"><span>Rainha</span></div>
+            <div class="choice" onclick="choose(this)"><span>Torre</span></div>
+            <div class="choice" onclick="choose(this)"><span>Bispo</span></div>
+            <div class="choice" onclick="choose(this)"><span>Cavalo</span></div>
+        </div>
+        <div id="board" class="board">
+            <div id="1" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="2" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="3" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="4" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="5" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="6" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="7" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="8" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+            <div id="9" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="10" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="11" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="12" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="13" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="14" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="15" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="16" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+            <div id="17" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="18" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="19" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="20" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="21" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="22" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="23" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="24" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+            <div id="25" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="26" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="27" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="28" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="29" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="30" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="31" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="32" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+            <div id="33" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="34" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="35" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="36" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="37" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="38" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="39" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="40" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+            <div id="41" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="42" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="43" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="44" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="45" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="46" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="47" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="48" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+            <div id="49" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="50" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="51" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="52" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="53" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="54" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="55" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="56" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+            <div id="57" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="58" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="59" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="60" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="61" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="62" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="63" class="square light" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+            <div id="64" class="square dark" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+        </div>
+    </div>
+    <div id="piecesBody" class="piecesBody">
+    </div>
+</body>
+<script>
+    var script = document.createElement('script');
+    script.src = "http://localhost:3000/socket.io/socket.io.js";
+    document.getElementsByTagName('head')[0].appendChild(script);
+    var socket = null;
+    var turn = true;
+    var color = 'gray';
+    var id = window.location.href.split("/")[4];
+    var vermelho = 0;
+    var azul = 0;
+    var pieces = ["peao", "torre", "cavalo", "bispo", "rainha", "rei"]
+    var lastPlay = [];
+    script.onload = callback = function () {
+        socket = io('http://localhost:3000', { transports: ['websocket'] });
+
+        document.getElementById("sala").innerHTML = "Sala: " + id;
+        document.getElementById("warningTopText").innerHTML = "Sua vez.";
+        document.getElementById("choices").style.display = "none";
+
+        socket.on("update-xadrez", (data, _color) => {
+            color = _color;
+            placePieces();
+        });
+
+        socket.on("play-piece-update", (_piece, movement) => {
+            var currentPlace = parseInt(document.getElementById(_piece).parentNode.id);
+            currentPlace += movement[0] + (8 * movement[1]);
+            updateColors(document.getElementById(_piece).parentNode.id, currentPlace);
+            if (document.getElementById(currentPlace).children.length > 0) document.getElementById(currentPlace).children[0].remove();
+            document.getElementById(currentPlace).appendChild(document.getElementById(_piece));
+            turn = true;
+            document.getElementById("warningTopText").innerHTML = "Sua vez.";
+            win();
+        });
+
+        socket.on("change-piece-update", (_pieceType, _piece, movement) => {
+            var currentPlace = parseInt(document.getElementById(_piece).parentNode.id);
+            currentPlace += movement[0] + (8 * movement[1]);
+            console.log(currentPlace);
+            updateColors(document.getElementById(_piece).parentNode.id, currentPlace);
+            if (document.getElementById(currentPlace).children.length > 0) document.getElementById(currentPlace).children[0].remove();
+            document.getElementById(_piece).remove();
+            if (_pieceType == "Rainha")
+                document.getElementById(currentPlace).insertAdjacentHTML("afterbegin", `
+                <div id="${_piece}" class="piece enemy">
+                    <img src="https://i.imgur.com/Dp2SPTL.png" draggable="true" ondragstart="drag(event)"></img>
+                </div>
+            `);
+            else if (_pieceType == "Torre")
+                document.getElementById(currentPlace).insertAdjacentHTML("afterbegin", `
+                    <div id="${_piece}" class="piece enemy">
+                        <img src="https://i.imgur.com/Bn88NIX.png" draggable="true" ondragstart="drag(event)"></img>
+                    </div>
+            `);
+            else if (_pieceType == "Bispo")
+                document.getElementById(currentPlace).insertAdjacentHTML("afterbegin", `
+                <div id="${_piece}" class="piece enemy">
+                    <img src="https://i.imgur.com/qbpe0SA.png" draggable="true" ondragstart="drag(event)"></img>
+                </div>
+            `);
+            else if (_pieceType == "Cavalo")
+                document.getElementById(currentPlace).insertAdjacentHTML("afterbegin", `
+                <div id="${_piece}" class="piece enemy">
+                    <img src="https://i.imgur.com/Chhnxm4.png" draggable="true" ondragstart="drag(event)"></img>
+                </div>
+            `);
+            turn = true;
+            document.getElementById("warningTopText").innerHTML = "Sua vez.";
+            win();
+        });
+
+        socket.on("player-connected", () => {
+            vermelho = 0;
+            azul = 0;
+            resetBoard();
+            document.getElementById("warningTopText").innerHTML = "Adversário conectou.";
+        });
+
+        socket.on("player-disconnected", () => {
+            vermelho = 0;
+            azul = 0;
+            resetBoard();
+            socket.emit("win-xadrez", id, "gray");
+            document.getElementById("warningTopText").innerHTML = "Adversário desconectou.";
+        });
+
+        socket.on("game-won", _color => {
+            if (_color != "gray") {
+                if (_color == "red") {
+                    vermelho++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do vermelho.";
+                } else {
+                    azul++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do azul.";
+                }
+            }
+            resetBoard();
+        });
+
+        socket.emit("join-room", "xadrez", id);
+    }
+
+    function playPiece(piece, _id, target) {
+        if (turn && color != "gray") {
+
+            var column = _id % 8;
+            if (column == 0) column = 8;
+            var row = (_id - column) / 8;
+
+            var targetColumn = target.id % 8;
+            if (targetColumn == 0) targetColumn = 8;
+            var targetRow = (target.id - targetColumn) / 8;
+
+            var n1 = targetColumn - column;
+            var n2 = targetRow - row;
+
+            var hasEnemy = function (_piece) {
+                if (target.children.length > 0) {
+                    if (target.children[0].classList.contains("enemy")) {
+                        return 1;
+                    } else {
+                        return 3;
+                    }
+                } else {
+                    if (_piece == "peao") {
+                        for (var i = row - 1; i >= targetRow + 1; i--) {
+                            if (document.getElementById(i * 8 + column).children.length > 0) {
+                                return 2;
+                            }
+                        }
+                    }
+
+                    else if (_piece == "torre") {
+                        if (row != targetRow) {
+                            if (row - targetRow < 0) {
+                                row = targetRow - row;
+                                targetRow = targetRow - row;
+                                row += targetRow;
+                                for (var i = row - 1; i >= targetRow + 1; i--) {
+                                    if (document.getElementById(i * 8 + column).children.length > 0) {
+                                        return 2;
+                                    }
+                                }
+                                row = targetRow - row;
+                                targetRow = targetRow - row;
+                                row += targetRow;
+                            } else {
+                                for (var i = row - 1; i >= targetRow + 1; i--) {
+                                    if (document.getElementById(i * 8 + column).children.length > 0) {
+                                        return 2;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (column - targetColumn > 0) {
+                            for (var i = column - 1; i >= targetColumn; i--) {
+                                if (document.getElementById(row * 8 + i).children.length > 0) {
+                                    return 2;
+                                }
+                            }
+                        } else if (column - targetColumn < 0) {
+                            for (var i = column + 1; i <= targetColumn; i++) {
+                                if (document.getElementById(row * 8 + i).children.length > 0) {
+                                    return 2;
+                                }
+                            }
+                        }
+                    }
+
+                    else if (_piece == "cavalo") { }
+
+                    else if (_piece == "bispo") {
+                        if (row - targetRow < 0 && column - targetColumn < 0) {
+                            let i = 1;
+                            for (var j = row + 1; j <= targetRow; j++) {
+                                if (column + i <= 8) {
+                                    if (document.getElementById(j * 8 + column + i).children.length > 0) {
+                                        return 2;
+                                    }
+                                    i++;
+                                }
+                            }
+                        } else if (row - targetRow < 0 && column - targetColumn > 0) {
+                            let i = 1;
+                            for (var j = row + 1; j <= targetRow; j++) {
+                                if (column - i >= 1) {
+                                    if (document.getElementById(j * 8 + column - i).children.length > 0) {
+                                        return 2;
+                                    }
+                                    i++;
+                                }
+                            }
+                        } else if (row - targetRow > 0 && column - targetColumn < 0) {
+                            let i = 1;
+                            for (var j = row - 1; j >= targetRow; j--) {
+                                if (column + i <= 8) {
+                                    if (document.getElementById(j * 8 + column + i).children.length > 0) {
+                                        return 2;
+                                    }
+                                    i++;
+                                }
+                            }
+                        } else if (row - targetRow > 0 && column - targetColumn > 0) {
+                            let i = 1;
+                            for (var j = row - 1; j >= targetRow; j--) {
+                                if (column - i >= 1) {
+                                    if (document.getElementById(j * 8 + column - i).children.length > 0) {
+                                        return 2;
+                                    }
+                                    i++;
+                                }
+                            }
+                        }
+                    }
+
+                    else if (_piece == "rainha") {
+                        if (row == targetRow || column == targetColumn) {
+                            if (row != targetRow) {
+                                if (row - targetRow < 0) {
+                                    row = targetRow - row;
+                                    targetRow = targetRow - row;
+                                    row += targetRow;
+                                    for (var i = row - 1; i >= targetRow + 1; i--) {
+                                        if (document.getElementById(i * 8 + column).children.length > 0) {
+                                            return 2;
+                                        }
+                                    }
+                                    row = targetRow - row;
+                                    targetRow = targetRow - row;
+                                    row += targetRow;
+                                } else {
+                                    for (var i = row - 1; i >= targetRow + 1; i--) {
+                                        if (document.getElementById(i * 8 + column).children.length > 0) {
+                                            return 2;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (column - targetColumn > 0) {
+                                for (var i = column - 1; i >= targetColumn; i--) {
+                                    if (document.getElementById(row * 8 + i).children.length > 0) {
+                                        return 2;
+                                    }
+                                }
+                            } else if (column - targetColumn < 0) {
+                                for (var i = column + 1; i <= targetColumn; i++) {
+                                    if (document.getElementById(row * 8 + i).children.length > 0) {
+                                        return 2;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (row - targetRow < 0 && column - targetColumn < 0) {
+                            let i = 1;
+                            for (var j = row + 1; j <= targetRow; j++) {
+                                if (column + i <= 8) {
+                                    if (document.getElementById(j * 8 + column + i).children.length > 0) {
+                                        return 2;
+                                    }
+                                    i++;
+                                }
+                            }
+                        } else if (row - targetRow < 0 && column - targetColumn > 0) {
+                            let i = 1;
+                            for (var j = row + 1; j <= targetRow; j++) {
+                                if (column - i >= 1) {
+                                    if (document.getElementById(j * 8 + column - i).children.length > 0) {
+                                        return 2;
+                                    }
+                                    i++;
+                                }
+                            }
+                        } else if (row - targetRow > 0 && column - targetColumn < 0) {
+                            let i = 1;
+                            for (var j = row - 1; j >= targetRow; j--) {
+                                if (column + i <= 8) {
+                                    if (document.getElementById(j * 8 + column + i).children.length > 0) {
+                                        return 2;
+                                    }
+                                    i++;
+                                }
+                            }
+                        } else if (row - targetRow > 0 && column - targetColumn > 0) {
+                            let i = 1;
+                            for (var j = row - 1; j >= targetRow; j--) {
+                                if (column - i >= 1) {
+                                    if (document.getElementById(j * 8 + column - i).children.length > 0) {
+                                        return 2;
+                                    }
+                                    i++;
+                                }
+                            }
+                        }
+                    }
+
+                    else if (_piece == "rei") { }
+                }
+                return 0;
+            }
+
+            var enemy = hasEnemy(piece);
+
+            if (piece == "peao") {
+                piece = document.getElementById(_id).children[0];
+                if (enemy == 0) {
+                    if (_id - 8 == target.id) {
+                    } else if (_id - 16 == target.id && row == 6) {
+                    } else
+                        return;
+                } else if (enemy == 1) {
+                    if (n1 < 0) n1 *= -1;
+                    if (n1 == 1 && n2 == -1) {
+                        document.getElementById(target.id).children[0].remove();
+                    } else
+                        return;
+                } else
+                    return;
+                if (targetRow == 0) {
+                    changePeao[0] = piece.id;
+                    changePeao[1] = target.id;
+                    changePeao[2] = [n1, n2];
+                    document.getElementById("choices").style.display = "grid";
+                    return;
+                }
+
+            } else if (piece == "torre") {
+                piece = document.getElementById(_id).children[0];
+                if (enemy == 0) {
+                    if ((_id - target.id) % 8 == 0 || row == targetRow) {
+                    } else
+                        return;
+                } else if (enemy == 1) {
+                    if (n1 == 0 || n2 == 0) {
+                        document.getElementById(target.id).children[0].remove();
+                    } else
+                        return;
+                } else
+                    return;
+
+            } else if (piece == "cavalo") {
+                piece = document.getElementById(_id).children[0];
+                if (n1 < 0) n1 *= -1;
+                if (n2 < 0) n2 *= -1;
+                if (enemy == 0);
+                else if (enemy == 1)
+                    if ((n1 == 1 && n2 == 2) || (n1 == 2 && n2 == 1))
+                        document.getElementById(target.id).children[0].remove();
+                    else
+                        return;
+                else
+                    return;
+                if (n1 == 1 && n2 == 2) {
+                } else if (n1 == 2 && n2 == 1) {
+                } else
+                    return;
+
+            } else if (piece == "bispo") {
+                piece = document.getElementById(_id).children[0];
+                n1 = parseInt(target.id) + 9 * (row - targetRow);
+                n2 = parseInt(target.id) + 7 * (row - targetRow);
+                if (enemy == 0);
+                else if (enemy == 1)
+                    if (_id == n1 || _id == n2)
+                        document.getElementById(target.id).children[0].remove();
+                    else
+                        return;
+                else
+                    return;
+                if (_id == n1 || _id == n2) {
+                } else
+                    return;
+
+            } else if (piece == "rainha") {
+                piece = document.getElementById(_id).children[0];
+                n1 = parseInt(target.id) + 9 * (row - targetRow);
+                n2 = parseInt(target.id) + 7 * (row - targetRow);
+                if (enemy == 0);
+                else if (enemy == 1)
+                    if ((_id - target.id) % 8 == 0 || row == targetRow || _id == n1 || _id == n2)
+                        document.getElementById(target.id).children[0].remove();
+                    else
+                        return;
+                else
+                    return;
+                if ((_id - target.id) % 8 == 0 || row == targetRow || _id == n1 || _id == n2) {
+                } else
+                    return;
+
+            } else if (piece == "rei") {
+                piece = document.getElementById(_id).children[0];
+                if (n1 < 0) n1 *= -1;
+                if (n2 < 0) n2 *= -1;
+                if (enemy == 0);
+                else if (enemy == 1)
+                    if (n1 < 2 && n2 < 2)
+                        document.getElementById(target.id).children[0].remove();
+                    else
+                        return;
+                else
+                    return;
+                if (n1 < 2 && n2 < 2) {
+                } else
+                    return;
+            } else
+                return;
+            updateColors(_id, target.id);
+            target.appendChild(piece);
+            socket.emit("xadrez-play-piece", [_id, target.id, piece.id, column, row, targetColumn, targetRow], id);
+            turn = false;
+            document.getElementById("warningTopText").innerHTML = "Vez do adversário.";
+        }
+    }
+
+    function win() {
+        var rei = document.getElementById("61p");
+    }
+
+    function canPlay() {
+    }
+
+    function resetBoard() {
+        if (lastPlay.length > 0) {
+            lastPlay[0].style.backgroundColor = lastPlay[2];
+            lastPlay[1].style.backgroundColor = lastPlay[3];
+        }
+        var board = document.getElementById("board").children;
+        for (var x in board) {
+            if (board[x].childElementCount > 0) {
+                board[x].children[0].remove();
+            }
+        }
+        placePieces();
+    }
+
+    function placePieces() {
+        for (var i = 49; i < 65; i++) {
+            if (i < 57) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece peao">
+                            <img src="https://i.imgur.com/HDTTImV.png" draggable="true" ondragstart="drag(event)"></img>
+                        </div>
+                    `);
+            } else if (i == 57 || i == 64) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece torre">
+                            <img src="https://i.imgur.com/Bn88NIX.png" draggable="true" ondragstart="drag(event)"></img>
+                        </div>
+                    `);
+            } else if (i == 58 || i == 63) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece cavalo">
+                            <img src="https://i.imgur.com/Chhnxm4.png" draggable="true" ondragstart="drag(event)"></img>
+                        </div>
+                    `);
+            } else if (i == 59 || i == 62) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece bispo">
+                            <img src="https://i.imgur.com/qbpe0SA.png" draggable="true" ondragstart="drag(event)"></img>
+                        </div>
+                    `);
+            } else if (i == 60) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece rainha">
+                            <img src="https://i.imgur.com/Dp2SPTL.png" draggable="true" ondragstart="drag(event)"></img>
+                        </div>
+                    `);
+            } else if (i == 61) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece rei">
+                            <img src="https://i.imgur.com/1UGZn89.png" draggable="true" ondragstart="drag(event)"></img>
+                        </div>
+                    `);
+            }
+        }
+
+        for (var i = 1; i < 17; i++) {
+            if (i > 8) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece enemy">
+                            <img src="https://i.imgur.com/HDTTImV.png" draggable="false"></img>
+                        </div>
+                    `);
+            } else if (i == 1 || i == 8) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece enemy">
+                            <img src="https://i.imgur.com/Bn88NIX.png" draggable="false"></img>
+                        </div>
+                    `);
+            } else if (i == 2 || i == 7) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece enemy">
+                            <img src="https://i.imgur.com/Chhnxm4.png" draggable="false"></img>
+                        </div>
+                    `);
+            } else if (i == 3 || i == 6) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece enemy">
+                            <img src="https://i.imgur.com/qbpe0SA.png" draggable="false"></img>
+                        </div>
+                    `);
+            } else if (i == 4) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece enemy">
+                            <img src="https://i.imgur.com/Dp2SPTL.png" draggable="false"></img>
+                        </div>
+                    `);
+            } else if (i == 5) {
+                document.getElementById(i).insertAdjacentHTML("afterbegin", `
+                        <div id="${i}p" class="piece enemy">
+                            <img src="https://i.imgur.com/1UGZn89.png" draggable="false"></img>
+                        </div>
+                    `);
+            }
+        }
+    }
+
+    var changePeao = [];
+    function choose(element) {
+        var chosenPiece = element.children[0].innerHTML;
+        element.parentNode.style.display = "none";
+        updateColors(document.getElementById(changePeao[0]).parentNode.id, changePeao[1]);
+        document.getElementById(changePeao[0]).remove();
+        if (chosenPiece == "Rainha")
+            document.getElementById(changePeao[1]).insertAdjacentHTML("afterbegin", `
+                <div id="${changePeao[0]}" class="piece rainha">
+                    <img src="https://i.imgur.com/Dp2SPTL.png" draggable="true" ondragstart="drag(event)"></img>
+                </div>
+            `);
+        else if (chosenPiece == "Torre")
+            document.getElementById(changePeao[1]).insertAdjacentHTML("afterbegin", `
+                    <div id="${changePeao[0]}" class="piece torre">
+                        <img src="https://i.imgur.com/Bn88NIX.png" draggable="true" ondragstart="drag(event)"></img>
+                    </div>
+            `);
+        else if (chosenPiece == "Bispo")
+            document.getElementById(changePeao[1]).insertAdjacentHTML("afterbegin", `
+                <div id="${changePeao[0]}" class="piece bispo">
+                    <img src="https://i.imgur.com/qbpe0SA.png" draggable="true" ondragstart="drag(event)"></img>
+                </div>
+            `);
+        else if (chosenPiece == "Cavalo")
+            document.getElementById(changePeao[1]).insertAdjacentHTML("afterbegin", `
+                <div id="${changePeao[0]}" class="piece cavalo">
+                    <img src="https://i.imgur.com/Chhnxm4.png" draggable="true" ondragstart="drag(event)"></img>
+                </div>
+            `);
+        socket.emit("xadrez-change-piece", chosenPiece, changePeao, id);
+        turn = false;
+        document.getElementById("warningTopText").innerHTML = "Vez do adversário.";
+    }
+
+    function updateColors(pieceId, targetId) {
+        if (lastPlay.length > 0) {
+            lastPlay[0].style.backgroundColor = lastPlay[2];
+            lastPlay[1].style.backgroundColor = lastPlay[3];
+        }
+        lastPlay = [document.getElementById(pieceId), document.getElementById(targetId), document.getElementById(pieceId).style.backgroundColor, document.getElementById(targetId).style.backgroundColor];
+        document.getElementById(pieceId).style.backgroundColor = "rgb(0, 163, 128)";
+        document.getElementById(targetId).style.backgroundColor = "rgb(0, 128, 96)";
+    }
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("id", ev.target.parentNode.parentNode.id);
+        ev.dataTransfer.setData("class", ev.target.parentNode.classList[1]);
+        ev.dataTransfer.setDragImage(new Image(), 0, 0);
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        if (ev.target.src) {
+            playPiece(ev.dataTransfer.getData("class"), ev.dataTransfer.getData("id"), ev.target.parentNode.parentNode);
+        } else {
+            playPiece(ev.dataTransfer.getData("class"), ev.dataTransfer.getData("id"), ev.target);
+        }
+    }
+</script>
+
+</html>

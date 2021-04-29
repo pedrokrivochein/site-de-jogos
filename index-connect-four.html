@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Connect 4</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .backButton {
+            width: 40px;
+            height: 40px;
+            background-color: teal;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            border-radius: 100%;
+            z-index: 10;
+        }
+
+        .backButton :hover {
+            cursor: pointer;
+        }
+
+        .gameBody {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .game {
+            display: grid;
+            grid-template-columns: repeat(7, 102px);
+        }
+
+        .block {
+            width: 100px;
+            height: 100px;
+            background-color: rgb(0, 163, 163);
+            outline: 1px solid white;
+            border-radius: 100%;
+        }
+
+        .warning {
+            position: fixed;
+            width: 600px;
+            height: 100px;
+            background-color: teal;
+            bottom: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+        }
+
+        .warningText {
+            margin: auto;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .stats {
+            position: fixed;
+            width: 600px;
+            height: 100px;
+            background-color: teal;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+        }
+
+        .statsText {
+            margin: auto;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .warningTop {
+            position: fixed;
+            width: 600px;
+            height: 60px;
+            background-color: teal;
+            top: 126px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+        }
+
+        .warningTopText {
+            margin: auto;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="backButton" onclick="window.location.href = 'http://localhost:5000/connect-four';">
+        <i class="fa fa-angle-left" style="color: white; font-size:40px; margin-left: 10px;"></i>
+    </div>
+    <div class="stats">
+        <span id="sala" class="statsText">Sala: 0</span>
+        <span id="placar" class="statsText">Vermelho: 0 | Azul: 0</span>
+    </div>
+    <div class="warningTop">
+        <span id="warningTopText" class="warningTopText"></span>
+    </div>
+    <div class="gameBody">
+        <div id="game" class="game">
+        </div>
+    </div>
+    <div class="warning">
+        <span id="warningText" class="warningText"></span>
+    </div>
+</body>
+<script>
+    for (var i = 1; i <= 42; i++) {
+        document.getElementById("game").insertAdjacentHTML("beforeend", `
+            <div id="${i}" class="block" onclick="playColor(this)"></div>
+        `)
+    }
+
+    var script = document.createElement('script');
+    script.src = "http://localhost:3000/socket.io/socket.io.js";
+    document.getElementsByTagName('head')[0].appendChild(script);
+    var socket = null;
+    var turn = true;
+    var color = 'gray';
+    var id = window.location.href.split("/")[4];
+    var vermelho = 0;
+    var azul = 0;
+    script.onload = callback = function () {
+        socket = io('http://localhost:3000', { transports: ['websocket'] });
+
+        document.getElementById("sala").innerHTML = "Sala: " + id;
+        document.getElementById("warningText").innerHTML = "Você é um espectador.";
+        document.getElementById("warningTopText").innerHTML = "Sua vez.";
+
+        socket.on("update-connect-four", (data, _color) => {
+            color = _color;
+            if (color == "red") {
+                document.getElementById("warningText").innerHTML = "Você é a cor vermelha.";
+            } else if (color == "blue") {
+                document.getElementById("warningText").innerHTML = "Você é a cor azul.";
+            }
+        });
+
+        socket.on("change-color", (data, _color) => {
+            document.getElementById(data).style.backgroundColor = _color;
+            document.getElementById("warningTopText").innerHTML = "Sua vez.";
+            turn = true;
+        });
+
+        socket.on("player-connected", () => {
+            vermelho = 0;
+            azul = 0;
+            resetBoard();
+            document.getElementById("warningTopText").innerHTML = "Adversário conectou.";
+        });
+
+        socket.on("player-disconnected", () => {
+            vermelho = 0;
+            azul = 0;
+            resetBoard();
+            socket.emit("win-connect-four", id, "gray");
+            document.getElementById("warningTopText").innerHTML = "Adversário desconectou.";
+        });
+
+        socket.on("game-won", _color => {
+            if (_color != "gray") {
+                if (_color == "red") {
+                    vermelho++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do vermelho.";
+                } else {
+                    azul++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do azul.";
+                }
+            }
+            resetBoard();
+        });
+
+        socket.emit("join-room", "connect-four", id);
+    }
+
+    function playColor(element) {
+        if (turn && color != "gray") {
+            var elementId = findPlacePlayColor(element.id);
+            if(elementId == -1) return;
+            element = document.getElementById(elementId);
+            element.style.backgroundColor = color;
+            if (win(elementId)) {
+                if (color == "red") {
+                    vermelho++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do vermelho.";
+                } else {
+                    azul++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do azul.";
+                }
+                resetBoard();
+                socket.emit("win-connect-four", id, color);
+            } else if (draw()) {
+                resetBoard();
+                socket.emit("win-connect-four", id, "gray");
+            } else {
+                socket.emit("change-color-server-connect-four", id, element.id, color);
+                document.getElementById("warningTopText").innerHTML = "Vez do adversário.";
+                turn = false;
+            }
+        }
+    }
+
+    function findPlacePlayColor(id) {
+        var column = id % 7;
+        var lastCircle = 0;
+        (column != 0) ? lastCircle = 42 - (7 - column) : lastCircle = 42;
+        for(var i = 0; i < 7; i++){
+            if(document.getElementById(lastCircle)){
+                if(document.getElementById(lastCircle).style.backgroundColor != "red" && document.getElementById(lastCircle).style.backgroundColor != "blue"){
+                    return lastCircle;
+                }
+            }
+            lastCircle -= 7;
+        }
+        return -1;
+    }
+
+    function win(id) {
+        var column = id % 7;
+        var lastCircle = 0;
+        (column != 0) ? lastCircle = 42 - (7 - column) : lastCircle = 42;
+        var count = 0;
+        for(var i = 0; i < 6; i++){
+            if(document.getElementById(lastCircle)){
+                if(document.getElementById(lastCircle).style.backgroundColor == color){
+                    count++;
+                    if(count == 4){
+                        return true;
+                    }
+                }else{
+                    count = 0;
+                }
+                lastCircle -= 7;
+            }
+        }
+        
+        count = 0;
+        (column != 0) ? lastCircle = id - (column - 1) : lastCircle = id - 6;
+        for(var i = 0; i < 7; i++){
+            if(document.getElementById(lastCircle)){
+                if(document.getElementById(lastCircle).style.backgroundColor == color){
+                    count++;
+                    if(count == 4){
+                        return true;
+                    }
+                }else{
+                    count = 0;
+                }
+                lastCircle++;
+            }
+        }
+
+        if(column == 0) column = 7;
+        count = 0;
+        lastCircle = id;
+        while(lastCircle % 7 != 1){
+            if(lastCircle <= 7){
+                break;
+            }
+            lastCircle -= 8;
+        }
+        for(var i = 0; i < 6; i++){
+            if(i >= 36 || column == 7) break;
+            if(document.getElementById(lastCircle)){
+                if(document.getElementById(lastCircle).style.backgroundColor == color){
+                    count++;
+                    if(count == 4){
+                        return true;
+                    }
+                }else{
+                    count = 0;
+                }
+                lastCircle += 8;
+            }
+        }
+
+        count = 0;
+        lastCircle = id;
+        while(lastCircle % 7 != 1){
+            if(lastCircle <= 7){
+                break;
+            }
+            lastCircle += 6;
+        }
+        for(var i = 0; i < 6; i++){
+            if(i <= 7 || column == 1) break;
+            if(document.getElementById(lastCircle)){
+                if(document.getElementById(lastCircle).style.backgroundColor == color){
+                    count++;
+                    if(count == 4){
+                        return true;
+                    }
+                }else{
+                    count = 0;
+                }
+                lastCircle -= 6;
+            }
+        }
+        return false;
+    }
+
+    function draw() {
+        for (var x in document.getElementById("game").children) {
+            if (x < 42) {
+                if (document.getElementById("game").children[x].style.backgroundColor != "red" && document.getElementById("game").children[x].style.backgroundColor != "blue") {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function resetBoard() {
+        for (var x in document.getElementById("game").children) {
+            if (x < 42) {
+                document.getElementById("game").children[x].style.backgroundColor = "rgb(0, 163, 163)";
+            }
+        }
+        document.getElementById("placar").innerHTML = "Vermelho: " + vermelho + " | Azul: " + azul;
+    }
+</script>
+
+</html>

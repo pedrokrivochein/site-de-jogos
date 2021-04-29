@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Jogo da Velha</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .backButton {
+            width: 40px;
+            height: 40px;
+            background-color: teal;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            border-radius: 100%;
+            z-index: 10;
+        }
+
+        .backButton :hover {
+            cursor: pointer;
+        }
+
+        .gameBody {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .game {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+        }
+
+        .block {
+            width: 100px;
+            height: 100px;
+            background-color: rgb(0, 163, 163);
+            outline: 1px solid white;
+        }
+
+        .warning {
+            position: fixed;
+            width: 600px;
+            height: 100px;
+            background-color: teal;
+            bottom: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+        }
+
+        .warningText {
+            margin: auto;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .stats {
+            position: fixed;
+            width: 600px;
+            height: 100px;
+            background-color: teal;
+            top: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+        }
+
+        .statsText {
+            margin: auto;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .warningTop {
+            position: fixed;
+            width: 600px;
+            height: 60px;
+            background-color: teal;
+            top: 126px;
+            left: 50%;
+            transform: translate(-50%);
+            display: flex;
+        }
+
+        .warningTopText {
+            margin: auto;
+            color: white;
+            font-size: 20px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="backButton" onclick="window.location.href = 'http://localhost:5000/jogo-da-velha';">
+        <i class="fa fa-angle-left" style="color: white; font-size:40px; margin-left: 10px;"></i>
+    </div>
+    <div class="stats">
+        <span id="sala" class="statsText">Sala: 0</span>
+        <span id="placar" class="statsText">Vermelho: 0 | Azul: 0</span>
+    </div>
+    <div class="warningTop">
+        <span id="warningTopText" class="warningTopText"></span>
+    </div>
+    <div class="gameBody">
+        <div id="game" class="game">
+            <div id="1" class="block" onclick="playColor(this)"></div>
+            <div id="2" class="block" onclick="playColor(this)"></div>
+            <div id="3" class="block" onclick="playColor(this)"></div>
+            <div id="4" class="block" onclick="playColor(this)"></div>
+            <div id="5" class="block" onclick="playColor(this)"></div>
+            <div id="6" class="block" onclick="playColor(this)"></div>
+            <div id="7" class="block" onclick="playColor(this)"></div>
+            <div id="8" class="block" onclick="playColor(this)"></div>
+            <div id="9" class="block" onclick="playColor(this)"></div>
+        </div>
+    </div>
+    <div class="warning">
+        <span id="warningText" class="warningText"></span>
+    </div>
+</body>
+<script>
+    var script = document.createElement('script');
+    script.src = "http://localhost:3000/socket.io/socket.io.js";
+    document.getElementsByTagName('head')[0].appendChild(script);
+    var socket = null;
+    var turn = true;
+    var color = 'gray';
+    var id = window.location.href.split("/")[4];
+    var vermelho = 0;
+    var azul = 0;
+    script.onload = callback = function () {
+        socket = io('http://localhost:3000', { transports: ['websocket'] });
+
+        document.getElementById("sala").innerHTML = "Sala: " + id;
+        document.getElementById("warningText").innerHTML = "Você é um espectador.";
+        document.getElementById("warningTopText").innerHTML = "Sua vez.";
+
+        socket.on("update-jogo-da-velha", (data, _color) => {
+            color = _color;
+            if (color == "red") {
+                document.getElementById("warningText").innerHTML = "Você é a cor vermelha.";
+            } else if (color == "blue") {
+                document.getElementById("warningText").innerHTML = "Você é a cor azul.";
+            }
+        });
+
+        socket.on("change-color", (data, _color) => {
+            document.getElementById(data).style.backgroundColor = _color;
+            document.getElementById("warningTopText").innerHTML = "Sua vez.";
+            turn = true;
+        });
+
+        socket.on("player-connected", () => {
+            vermelho = 0;
+            azul = 0;
+            resetBoard();
+            document.getElementById("warningTopText").innerHTML = "Adversário conectou.";
+        });
+
+        socket.on("player-disconnected", () => {
+            vermelho = 0;
+            azul = 0;
+            resetBoard();
+            socket.emit("win-jogo-da-velha", id, "gray");
+            document.getElementById("warningTopText").innerHTML = "Adversário desconectou.";
+        });
+
+        socket.on("game-won", _color => {
+            if (_color != "gray") {
+                if (_color == "red") {
+                    vermelho++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do vermelho.";
+                } else {
+                    azul++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do azul.";
+                }
+            }
+            resetBoard();
+        });
+
+        socket.emit("join-room", "jogo-da-velha", id);
+    }
+
+    function playColor(element) {
+        if (turn && color != "gray" && element.style.backgroundColor != "red" && element.style.backgroundColor != "blue") {
+            element.style.backgroundColor = color;
+            if (win()) {
+                if (color == "red") {
+                    vermelho++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do vermelho.";
+                } else {
+                    azul++;
+                    document.getElementById("warningTopText").innerHTML = "Vitória do azul.";
+                }
+                resetBoard();
+                socket.emit("win-jogo-da-velha", id, color);
+            } else if (draw()) {
+                resetBoard();
+                socket.emit("win-jogo-da-velha", id, "gray");
+            } else {
+                socket.emit("change-color-server-jogo-da-velha", id, element.id, color)
+                document.getElementById("warningTopText").innerHTML = "Vez do adversário.";
+                turn = false;
+            }
+        }
+    }
+
+    var possibilites = [[1, 2, 3], [1, 4, 7], [1, 5, 9], [9, 6, 3], [9, 8, 7], [3, 5, 7], [2, 5, 8], [4, 5, 6]];
+    function win() {
+        for (var x in possibilites) {
+            var i1 = document.getElementById(possibilites[x][0]).style.backgroundColor;
+            var i2 = document.getElementById(possibilites[x][1]).style.backgroundColor;
+            var i3 = document.getElementById(possibilites[x][2]).style.backgroundColor;
+            if (i1 == "red" || i1 == "blue") {
+                if (i1 == i2 && i2 == i3) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    function draw() {
+        for (var x in document.getElementById("game").children) {
+            if (x < 9) {
+                if (document.getElementById("game").children[x].style.backgroundColor != "red" && document.getElementById("game").children[x].style.backgroundColor != "blue") {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function resetBoard() {
+        for (var x in document.getElementById("game").children) {
+            if (x < 9) {
+                document.getElementById("game").children[x].style.backgroundColor = "rgb(0, 163, 163)";
+            }
+        }
+        document.getElementById("placar").innerHTML = "Vermelho: " + vermelho + " | Azul: " + azul;
+    }
+</script>
+
+</html>

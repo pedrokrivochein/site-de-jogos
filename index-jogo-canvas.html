@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Canvas</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .backButton{
+            width: 40px;
+            height: 40px;
+            background-color: teal;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            border-radius: 100%;
+            z-index: 10;
+        }
+
+        .backButton :hover{
+            cursor: pointer;
+        }
+
+        .blocksBody {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .blocks {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(192, 10px);
+        }
+
+        .block {
+            width: 10px;
+            height: 10px;
+            background-color: gray;
+            outline: 1px solid white;
+        }
+
+        .colorChooser {
+            width: 200px;
+            height: 100px;
+            background-color: gray;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translate(-50%);
+            display: grid;
+            grid-template-columns: repeat(10, 20px);
+            grid-template-rows: repeat(2, 50px);
+        }
+
+        .colors {
+            width: 20px;
+        }
+
+        .colorSelection {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="backButton" onclick="window.location.href = 'http://localhost:5000/';">
+        <i class="fa fa-angle-left" style="color: white; font-size:40px; margin-left: 10px;"></i>
+    </div>
+    <div class="blocksBody">
+        <div id="blocks" class="blocks">
+        </div>
+    </div>
+    <div id="colorChooser" class="colorChooser">
+        <div style="background-color: red;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: yellow;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: green;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: blue;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: purple;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: orange;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: pink;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: cyan;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: gray;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: brown;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: gold;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: springgreen;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: tomato;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+        <div style="background-color: rebeccapurple;" class="colors" onclick="changeSelectedColor(this)">
+            <div class="colorSelection"></div>
+        </div>
+    </div>
+</body>
+<script>
+    var script = document.createElement('script');
+    var choosedColor = document.getElementById("colorChooser").children[0];
+    script.src = "http://localhost:3000/socket.io/socket.io.js";
+    document.getElementsByTagName('head')[0].appendChild(script);
+    var socket = null;
+    script.onload = callback = function () {
+        socket = io('http://localhost:3000', { transports: ['websocket'] });
+        
+        document.getElementById("colorChooser").children[0].children[0].style.display = "block";
+
+        socket.on("update-canvas", data => {
+            console.log(data)
+            for(var key in data){
+                if(data[key]){
+                    document.getElementById(key).style.background = data[key];
+                }
+            }
+        })
+
+        for (var i = 1; i <= 8 * 2400; i++) {
+            document.getElementById("blocks").insertAdjacentHTML('beforeend',
+                `<div class="block" id="${i}" onclick="changeColor(this)"></div>`
+            );
+        }
+
+        socket.on("change-color", (data, color) => {
+            console.log(data + " " + color)
+            changeColorClient(document.getElementById(data), color);
+        })
+
+        socket.on("send-message", data => {
+            console.log(data);
+        });
+
+        socket.emit("join-canvas");
+    }
+
+    function changeColorClient(element, color) {
+        if (element.style.backgroundColor != color) {
+            element.style.backgroundColor = color;
+        }
+    }
+
+    function changeColor(element) {
+        if (element.style.backgroundColor != choosedColor.style.backgroundColor) {
+            element.style.backgroundColor = choosedColor.style.backgroundColor;
+        }
+        socket.emit("change-color-server-canvas", element.id, choosedColor.style.backgroundColor);
+    }
+
+    function changeSelectedColor(element) {
+        choosedColor.children[0].style.display = "none";
+        element.children[0].style.display = "block";
+        choosedColor = element;
+    }
+</script>
+
+</html>
