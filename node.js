@@ -143,7 +143,25 @@ io.on("connection", socket => {
         n1 *= -1;
         var n2 = pieceData[4] - pieceData[6];
         var _piece = parseInt(pieceData[2].split("p")[0]);
-        _piece = xadrez.compare[_piece];
+        var compare = {
+            49 : 9,
+            50 : 10,
+            51 : 11,
+            52 : 12,
+            53 : 13,
+            54 : 14,
+            55 : 15,
+            56 : 16,
+            57 : 1,
+            58 : 2,
+            59 : 3,
+            60 : 4,
+            61 : 5,
+            62 : 6,
+            63 : 7,
+            64 : 8,
+        }
+        _piece = compare[_piece];
 
         socket.to("xadrez/" + id).emit("play-piece-update", _piece + "p", [n1, n2]);
     });
